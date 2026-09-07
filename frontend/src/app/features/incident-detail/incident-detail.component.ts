@@ -1,14 +1,15 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { ApiService } from '../../core/services/api.service';
-import { Incident, Event, AttackStep } from '../../core/models';
+import { AttackGraphComponent } from '../../shared/attack-graph.component';
+import { Incident, Event, AttackStep, IncidentGraph, KillChainPhase } from '../../core/models';
 
 @Component({
   selector: 'app-incident-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, AttackGraphComponent],
   template: `
     <a routerLink="/incidents" class="muted" style="text-decoration:none">← Back to incidents</a>
 
@@ -19,38 +20,48 @@ import { Incident, Event, AttackStep } from '../../core/models';
       </div>
       <p class="page-sub">Incident #{{ i.id }} · {{ i.status }} · confidence {{ (i.confidence*100)|number:'1.0-0' }}%</p>
 
+      <!-- Kill-chain strip (FR-20) -->
+      <div class="card" style="margin-bottom:16px">
+        <h2>Kill chain</h2>
+        <div class="killchain">
+          <div class="kc-phase" *ngFor="let p of killchain(); let last = last"
+               [class.observed]="p.observed">
+            <div class="kc-name">{{ p.phase }}</div>
+            <div class="kc-techs">
+              <span *ngFor="let t of p.techniques" class="mitre">{{ t.id }}</span>
+              <span *ngIf="!p.observed" class="muted" style="font-size:11px">—</span>
+            </div>
+            <div class="kc-arrow" *ngIf="!last">→</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attack graph (FR-17) -->
+      <div class="card" style="margin-bottom:16px">
+        <h2>Attack graph</h2>
+        <app-attack-graph [graph]="graph()"></app-attack-graph>
+      </div>
+
       <div class="grid grid-2">
-        <!-- Attack story (FR-16) + MITRE (FR-19) -->
-        <div style="display:flex; flex-direction:column; gap:16px">
-          <div class="card">
-            <h2>Attack story</h2>
-            <div class="timeline" *ngIf="story().length; else noStory">
-              <div class="step" *ngFor="let s of story()">
-                <div class="dot"></div>
-                <div class="step-body">
-                  <div class="step-desc">{{ s.description }}</div>
-                  <div class="step-meta">
-                    <span *ngIf="s.timestamp" class="muted">{{ s.timestamp | date:'HH:mm:ss' }}</span>
-                    <span *ngIf="s.mitre_id" class="mitre">{{ s.mitre_id }} · {{ s.mitre_name }}</span>
-                  </div>
+        <!-- Attack story (FR-16) + MITRE tags (FR-19) -->
+        <div class="card">
+          <h2>Attack story</h2>
+          <div class="timeline" *ngIf="story().length; else noStory">
+            <div class="step" *ngFor="let s of story()">
+              <div class="dot"></div>
+              <div class="step-body">
+                <div class="step-desc">{{ s.description }}</div>
+                <div class="step-meta">
+                  <span *ngIf="s.timestamp" class="muted">{{ s.timestamp | date:'HH:mm:ss' }}</span>
+                  <span *ngIf="s.mitre_id" class="mitre">{{ s.mitre_id }} · {{ s.mitre_name }}</span>
                 </div>
               </div>
             </div>
-            <ng-template #noStory>
-              <p class="muted">No reconstructed steps for this incident.</p>
-            </ng-template>
           </div>
-
-          <div class="card">
-            <h2>AI guidance &amp; recommended steps</h2>
-            <div class="phase-note" style="padding:24px">
-              <span class="tag">Phase 4</span>
-              <p>Grounded AI investigation assistant and safe command recommendations (FR-21–29).</p>
-            </div>
-          </div>
+          <ng-template #noStory><p class="muted">No reconstructed steps.</p></ng-template>
         </div>
 
-        <!-- Evidence timeline -->
+        <!-- Evidence -->
         <div class="card">
           <h2>Evidence ({{ events().length }} events)</h2>
           <table>
@@ -67,6 +78,14 @@ import { Incident, Event, AttackStep } from '../../core/models';
           </table>
         </div>
       </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>AI guidance &amp; recommended steps</h2>
+        <div class="phase-note" style="padding:24px">
+          <span class="tag">Phase 4</span>
+          <p>Grounded AI investigation assistant and safe command recommendations (FR-21–29).</p>
+        </div>
+      </div>
     </ng-container>
   `,
   styles: [`
@@ -80,16 +99,25 @@ import { Incident, Event, AttackStep } from '../../core/models';
            margin-top: 3px; flex-shrink: 0; z-index: 1; }
     .step-desc { font-size: 14px; }
     .step-meta { display: flex; gap: 12px; margin-top: 4px; font-size: 12px; }
-    .mitre {
-      background: var(--panel-hi); color: var(--accent);
-      padding: 1px 8px; border-radius: 999px; font-size: 11px;
-    }
+    .mitre { background: var(--panel-hi); color: var(--accent);
+             padding: 1px 8px; border-radius: 999px; font-size: 11px; margin-right: 4px; }
+
+    .killchain { display: flex; align-items: stretch; gap: 0; overflow-x: auto; }
+    .kc-phase { flex: 1; min-width: 120px; padding: 10px 8px; text-align: center;
+                border-radius: 8px; position: relative; opacity: .45; }
+    .kc-phase.observed { opacity: 1; background: var(--panel-hi); }
+    .kc-name { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+    .kc-techs { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+    .kc-arrow { position: absolute; right: -7px; top: 50%; transform: translateY(-50%);
+                color: var(--border); font-size: 14px; }
   `],
 })
 export class IncidentDetailComponent implements OnInit {
   incident = signal<Incident | null>(null);
   events = signal<Event[]>([]);
   story = signal<AttackStep[]>([]);
+  graph = signal<IncidentGraph>({ nodes: [], edges: [] });
+  killchain = signal<KillChainPhase[]>([]);
 
   constructor(private route: ActivatedRoute, private api: ApiService) {}
 
@@ -98,5 +126,7 @@ export class IncidentDetailComponent implements OnInit {
     this.api.getIncident(id).subscribe(i => this.incident.set(i));
     this.api.incidentEvents(id).subscribe(ev => this.events.set(ev));
     this.api.incidentStory(id).subscribe(s => this.story.set(s));
+    this.api.incidentGraph(id).subscribe(g => this.graph.set(g));
+    this.api.incidentKillchain(id).subscribe(k => this.killchain.set(k));
   }
 }

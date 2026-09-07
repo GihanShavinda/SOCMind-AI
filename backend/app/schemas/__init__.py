@@ -125,6 +125,37 @@ class AttackStepOut(BaseModel):
     mitre_name: str | None
 
 
+# ---- Attack graph (FR-17) ----
+class GraphNode(BaseModel):
+    id: str
+    type: str            # attacker | account | host | process | external
+    label: str
+
+
+class GraphEdge(BaseModel):
+    source: str
+    target: str
+    label: str
+
+
+class IncidentGraph(BaseModel):
+    nodes: list[GraphNode]
+    edges: list[GraphEdge]
+
+
+# ---- MITRE kill chain (FR-19, FR-20) ----
+class Technique(BaseModel):
+    id: str
+    name: str | None
+
+
+class KillChainPhase(BaseModel):
+    phase: str
+    order: int
+    observed: bool
+    techniques: list[Technique]
+
+
 class AuditOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

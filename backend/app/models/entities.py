@@ -96,6 +96,7 @@ class Incident(Base, TimestampMixin):
     related_count: Mapped[int] = mapped_column(Integer, default=0)
     asset_id: Mapped[int | None] = mapped_column(ForeignKey("assets.id"), nullable=True)
 
+    asset: Mapped["Asset"] = relationship()
     events: Mapped[list["Event"]] = relationship(back_populates="incident")
     alerts: Mapped[list["Alert"]] = relationship(back_populates="incident")
     steps: Mapped[list["AttackStep"]] = relationship(

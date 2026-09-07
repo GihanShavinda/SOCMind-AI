@@ -63,6 +63,35 @@ export interface AttackStep {
   mitre_name: string | null;
 }
 
+export interface GraphNode {
+  id: string;
+  type: 'attacker' | 'account' | 'host' | 'process' | 'external';
+  label: string;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  label: string;
+}
+
+export interface IncidentGraph {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+export interface Technique {
+  id: string;
+  name: string | null;
+}
+
+export interface KillChainPhase {
+  phase: string;
+  order: number;
+  observed: boolean;
+  techniques: Technique[];
+}
+
 export interface AuditEntry {
   id: number;
   actor: string;

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Asset, Event, Incident, AttackStep, AuditEntry } from '../models';
+import { Asset, Event, Incident, AttackStep, IncidentGraph, KillChainPhase, AuditEntry } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -31,6 +31,15 @@ export class ApiService {
   }
   incidentStory(id: number): Observable<AttackStep[]> {
     return this.http.get<AttackStep[]>(`${this.base}/api/incidents/${id}/story`);
+  }
+  incidentGraph(id: number): Observable<IncidentGraph> {
+    return this.http.get<IncidentGraph>(`${this.base}/api/incidents/${id}/graph`);
+  }
+  incidentKillchain(id: number): Observable<KillChainPhase[]> {
+    return this.http.get<KillChainPhase[]>(`${this.base}/api/incidents/${id}/killchain`);
+  }
+  mitreKillchain(): Observable<KillChainPhase[]> {
+    return this.http.get<KillChainPhase[]>(`${this.base}/api/mitre/killchain`);
   }
 
   // Events (FR-9..11)
