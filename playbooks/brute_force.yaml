@@ -1,0 +1,48 @@
+# Structured response playbook (FR-30). Each step carries a risk level and an
+# approval requirement so the human-in-the-loop decision engine can gate actions.
+name: SSH/RDP Brute Force Response
+attack_type: brute_force
+mitre:
+  - T1110      # Brute Force
+steps:
+  - order: 1
+    action: Review the failed authentication pattern (source IP, targeted accounts, timing)
+    risk: Low
+    approval_required: false
+    expected_result: Confirmed cluster of failed logins from one source
+
+  - order: 2
+    action: Check whether a successful authentication followed the failures
+    risk: Low
+    approval_required: false
+    expected_result: Determination of whether access was gained
+
+  - order: 3
+    action: Identify the potentially compromised account
+    risk: Low
+    approval_required: false
+    expected_result: Named account under investigation
+
+  - order: 4
+    action: Review activity performed after login (processes, connections)
+    risk: Low
+    approval_required: false
+    expected_result: Post-compromise activity timeline
+
+  - order: 5
+    action: Block the malicious source IP at the firewall
+    risk: Medium
+    approval_required: true
+    expected_result: Source IP can no longer reach the asset
+
+  - order: 6
+    action: Reset credentials for the compromised account
+    risk: High
+    approval_required: true
+    expected_result: Attacker access revoked
+
+  - order: 7
+    action: Close the incident and generate the report
+    risk: Low
+    approval_required: false
+    expected_result: Documented, auditable case package

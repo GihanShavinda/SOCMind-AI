@@ -1,0 +1,29 @@
+# Sigma-style detection rule (detection-as-code).
+# The Phase 1 engine implements this logic directly; from P2 onward, load rules
+# like this dynamically so new detections need no code changes.
+title: SSH Brute Force - Repeated Authentication Failures
+id: ssh_bruteforce_repeated_failures
+status: experimental
+description: >
+  Detects multiple failed SSH authentication attempts from a single source IP
+  against one asset within a short time window, indicating a brute-force attack.
+author: SOCMind AI
+tags:
+  - attack.credential_access
+  - attack.t1110          # Brute Force
+logsource:
+  product: linux
+  service: auth
+detection:
+  selection:
+    event_type: authentication_failure
+  timeframe: 120s
+  condition: selection | count(source_ip) by asset >= 5
+level: high
+falsepositives:
+  - Misconfigured service accounts retrying with stale credentials
+  - Legitimate users repeatedly mistyping passwords
+fields:
+  - source_ip
+  - username
+  - asset
