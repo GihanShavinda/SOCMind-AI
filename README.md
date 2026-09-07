@@ -105,3 +105,19 @@ socmind-ai/
 
 Keep the audit log wired from the start, and keep the LLM strictly optional.
 ```
+
+---
+
+## Frontend (Angular)
+
+The analyst web console lives in `frontend/` (Angular 18). Run it alongside the
+backend:
+
+```bash
+cd frontend
+npm install
+npm start          # http://localhost:4200
+```
+
+See `frontend/README.md` for details and `docs/REQUIREMENTS_TRACEABILITY.md` for
+the full requirement → screen → phase mapping.

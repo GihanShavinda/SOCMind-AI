@@ -1,0 +1,8 @@
+id: outbound_c2
+title: Unusual Outbound Connection (possible C2 / exfiltration)
+event_type: outbound_connection
+severity: high
+mitre: T1071
+incident_title: "Unusual outbound connection from {asset}"
+correlation:
+  type: single

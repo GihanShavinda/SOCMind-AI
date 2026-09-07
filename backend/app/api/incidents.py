@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models import Incident, Event, AuditLog, User
-from app.schemas import IncidentOut, EventOut, AuditOut
+from app.models import Incident, Event, AttackStep, AuditLog, User
+from app.schemas import IncidentOut, EventOut, AttackStepOut, AuditOut
 
 router = APIRouter(prefix="/api/incidents", tags=["incidents"])
 
@@ -32,6 +32,19 @@ def incident_events(
         db.query(Event)
         .filter(Event.incident_id == incident_id)
         .order_by(Event.timestamp)
+        .all()
+    )
+
+
+@router.get("/{incident_id}/story", response_model=list[AttackStepOut])
+def incident_story(
+    incident_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)
+):
+    """Ordered attack-story narrative for an incident (FR-16)."""
+    return (
+        db.query(AttackStep)
+        .filter(AttackStep.incident_id == incident_id)
+        .order_by(AttackStep.order)
         .all()
     )
 

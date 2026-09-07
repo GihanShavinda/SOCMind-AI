@@ -1,0 +1,12 @@
+id: port_scan
+title: Port Scan / Reconnaissance
+event_type: network_connection
+severity: medium
+mitre: T1046
+incident_title: "Port scan from {source_ip}"
+correlation:
+  type: threshold
+  count: 10            # 10+ distinct destination ports
+  window_seconds: 60
+  group_by: [asset_id, source_ip]
+  distinct_field: dest_port

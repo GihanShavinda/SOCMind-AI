@@ -20,6 +20,7 @@ def ingest_event(db: Session, payload: EventIn) -> IngestResult:
         username=payload.username,
         severity=payload.severity,
         raw_ref=payload.raw_ref,
+        attributes=payload.attributes,
     )
     db.add(event)
     db.flush()  # assign event.id before detection
@@ -30,5 +31,5 @@ def ingest_event(db: Session, payload: EventIn) -> IngestResult:
     return IngestResult(
         event_id=event.id,
         incident_id=incident.id if incident else None,
-        detection="ssh_bruteforce" if incident else None,
+        detection=incident.title if incident else None,
     )

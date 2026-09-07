@@ -1,0 +1,8 @@
+id: suspicious_process
+title: Suspicious Process Execution
+event_type: suspicious_process
+severity: medium
+mitre: T1059
+incident_title: "Suspicious process on {asset}"
+correlation:
+  type: single

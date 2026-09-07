@@ -81,6 +81,7 @@ class EventIn(BaseModel):
     username: str | None = None
     severity: Severity = Severity.LOW
     raw_ref: str | None = None
+    attributes: dict | None = None   # dest_port, process_name, dest_ip, ...
 
 
 class EventOut(BaseModel):
@@ -112,6 +113,16 @@ class IncidentOut(BaseModel):
     related_count: int
     asset_id: int | None
     created_at: datetime
+
+
+class AttackStepOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    order: int
+    timestamp: datetime | None
+    description: str
+    mitre_id: str | None
+    mitre_name: str | None
 
 
 class AuditOut(BaseModel):
