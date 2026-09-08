@@ -57,6 +57,8 @@ class AssetUpdate(BaseModel):
     environment: str | None = None
     criticality: Criticality | None = None
     agent_status: str | None = None
+    automation_enabled: bool | None = None
+    auto_action_types: list[str] | None = None
 
 
 class AssetOut(BaseModel):
@@ -69,6 +71,8 @@ class AssetOut(BaseModel):
     environment: str
     criticality: Criticality
     agent_status: str
+    automation_enabled: bool = False
+    auto_action_types: list[str] | None = None
 
 
 # ---- Events (unified schema) ----
@@ -156,6 +160,34 @@ class KillChainPhase(BaseModel):
     techniques: list[Technique]
 
 
+# ---- AI assistant (FR-21..29) ----
+class CommandRec(BaseModel):
+    id: str
+    os: str
+    command: str
+    purpose: str
+    why: str
+    risk: str
+
+
+class NextStep(BaseModel):
+    order: int
+    action: str
+    rationale: str
+    command: CommandRec | None = None
+
+
+class AssistantAnalysis(BaseModel):
+    incident_id: int
+    what_happened: str
+    why_suspicious: str
+    next_steps: list[NextStep]
+    recommended_commands: list[CommandRec]
+    grounded_on: list[str]
+    source: str          # "rule-based" | "llm"
+    model: str | None = None
+
+
 class AuditOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
@@ -163,3 +195,58 @@ class AuditOut(BaseModel):
     action: str
     target: str | None
     timestamp: datetime
+
+
+# ---- Phase 5: playbooks, decisions, actions ----
+class PlaybookStepOut(BaseModel):
+    order: int
+    action: str
+    risk: str
+    approval_required: bool
+    expected_result: str
+
+
+class PlaybookOut(BaseModel):
+    name: str
+    attack_type: str
+    mitre: list[str]
+    steps: list[PlaybookStepOut]
+
+
+class DecisionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    incident_id: int
+    action_type: str
+    threat_conf: float
+    response_conf: float
+    asset_crit: str
+    impact: str
+    outcome: str
+    rationale: str
+    created_at: datetime
+
+
+class ActionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    incident_id: int
+    decision_id: int | None
+    type: str
+    description: str
+    risk_level: str
+    status: str
+    reversible: bool
+    undo_ref: str | None
+    performed_by: str | None
+    created_at: datetime
+    executed_at: datetime | None
+
+
+class ProposeActionIn(BaseModel):
+    action_type: str
+
+
+class AutomationPolicyIn(BaseModel):
+    automation_enabled: bool
+    auto_action_types: list[str] | None = None

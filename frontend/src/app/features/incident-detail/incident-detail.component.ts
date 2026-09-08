@@ -1,10 +1,10 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { ApiService } from '../../core/services/api.service';
 import { AttackGraphComponent } from '../../shared/attack-graph.component';
-import { Incident, Event, AttackStep, IncidentGraph, KillChainPhase } from '../../core/models';
+import { Incident, Event, AttackStep, IncidentGraph, KillChainPhase, AssistantAnalysis, ResponseAction } from '../../core/models';
 
 @Component({
   selector: 'app-incident-detail',
@@ -79,12 +79,81 @@ import { Incident, Event, AttackStep, IncidentGraph, KillChainPhase } from '../.
         </div>
       </div>
 
+      <!-- Response actions (Phase 5) -->
       <div class="card" style="margin-top:16px">
-        <h2>AI guidance &amp; recommended steps</h2>
-        <div class="phase-note" style="padding:24px">
-          <span class="tag">Phase 4</span>
-          <p>Grounded AI investigation assistant and safe command recommendations (FR-21–29).</p>
+        <h2>Response actions</h2>
+        <p class="muted" style="margin-top:0; font-size:13px">
+          Propose a controlled action. The decision engine decides automate vs approval based on
+          risk, asset criticality, confidence and impact — nothing destructive ever auto-runs.
+        </p>
+        <div class="action-buttons">
+          <button class="btn-ghost" *ngFor="let t of actionTypes" (click)="propose(t.type)">
+            {{ t.label }}
+          </button>
         </div>
+
+        <table *ngIf="actions().length" style="margin-top:16px">
+          <thead><tr><th>Action</th><th>Risk</th><th>Status</th><th>By</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let a of actions()">
+              <td>{{ a.description }}</td>
+              <td><span class="badge risk-{{ a.risk_level }}">{{ a.risk_level }}</span></td>
+              <td><span class="status s-{{ a.status }}">{{ a.status.replace('_', ' ') }}</span></td>
+              <td class="muted">{{ a.performed_by || '—' }}</td>
+              <td style="text-align:right">
+                <button *ngIf="a.status === 'pending_approval'" class="btn-ghost sm" (click)="approve(a)">Approve</button>
+                <button *ngIf="a.status === 'executed' && a.reversible" class="btn-ghost sm" (click)="rollback(a)">Undo</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="error" *ngIf="actionError">{{ actionError }}</p>
+      </div>
+
+      <div class="card" style="margin-top:16px" *ngIf="analysis() as a">
+        <div style="display:flex; align-items:center; gap:10px">
+          <h2 style="margin:0">AI investigation assistant</h2>
+          <span class="src-badge" [class.llm]="a.source === 'llm'">
+            {{ a.source === 'llm' ? (a.model || 'LLM') : 'rule-based' }}
+          </span>
+        </div>
+
+        <div class="ai-block">
+          <div class="ai-label">What happened</div>
+          <p>{{ a.what_happened }}</p>
+        </div>
+        <div class="ai-block">
+          <div class="ai-label">Why it's suspicious</div>
+          <p>{{ a.why_suspicious }}</p>
+        </div>
+
+        <div class="ai-block">
+          <div class="ai-label">Prioritised next steps</div>
+          <div class="step-card" *ngFor="let s of a.next_steps">
+            <div class="step-top">
+              <span class="step-n">{{ s.order }}</span>
+              <span class="step-action">{{ s.action }}</span>
+              <span *ngIf="s.command" class="badge risk-{{ s.command.risk }}">{{ s.command.risk }}</span>
+            </div>
+            <p class="step-why muted">{{ s.rationale }}</p>
+            <div class="cmd" *ngIf="s.command">
+              <code>{{ s.command.command }}</code>
+              <button class="copy" (click)="copy(s.command!.command)">copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-block">
+          <div class="ai-label">Grounded on</div>
+          <div class="grounding">
+            <span class="chip" *ngFor="let g of a.grounded_on">{{ g }}</span>
+          </div>
+        </div>
+
+        <p class="muted safe-note">
+          Commands are drawn only from the approved catalog and risk-classified.
+          Nothing runs automatically — execution &amp; approval arrive in Phase 5.
+        </p>
       </div>
     </ng-container>
   `,
@@ -110,6 +179,41 @@ import { Incident, Event, AttackStep, IncidentGraph, KillChainPhase } from '../.
     .kc-techs { display: flex; flex-direction: column; gap: 3px; align-items: center; }
     .kc-arrow { position: absolute; right: -7px; top: 50%; transform: translateY(-50%);
                 color: var(--border); font-size: 14px; }
+
+    .src-badge { font-size: 11px; padding: 2px 10px; border-radius: 999px;
+                 background: var(--panel-hi); color: var(--muted); text-transform: uppercase;
+                 letter-spacing: .05em; }
+    .src-badge.llm { color: var(--accent); }
+    .ai-block { margin-top: 16px; }
+    .ai-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+                color: var(--muted); margin-bottom: 6px; }
+    .step-card { background: var(--panel-hi); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+    .step-top { display: flex; align-items: center; gap: 10px; }
+    .step-n { width: 20px; height: 20px; border-radius: 50%; background: var(--bg);
+              color: var(--accent); display: flex; align-items: center; justify-content: center;
+              font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .step-action { font-weight: 600; flex: 1; }
+    .step-why { font-size: 13px; margin: 6px 0 8px; }
+    .cmd { display: flex; align-items: center; gap: 8px; background: var(--bg);
+           border-radius: 6px; padding: 8px 10px; }
+    .cmd code { color: var(--low); font-size: 12px; flex: 1; word-break: break-all; }
+    .copy { background: transparent; border: 1px solid var(--border); color: var(--muted);
+            border-radius: 5px; padding: 3px 10px; font-size: 11px; }
+    .copy:hover { color: var(--text); }
+    .grounding { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { background: var(--panel-hi); border-radius: 999px; padding: 3px 10px; font-size: 11px; color: var(--muted); }
+    .risk-Low { background: rgba(63,185,80,.15); color: var(--low); }
+    .risk-Medium { background: rgba(210,153,34,.15); color: var(--medium); }
+    .risk-High { background: rgba(248,81,73,.15); color: var(--high); }
+    .risk-Restricted { background: rgba(255,107,157,.15); color: var(--critical); }
+    .safe-note { font-size: 11px; margin-top: 14px; }
+    .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn-ghost.sm { padding: 4px 10px; font-size: 12px; }
+    .status { font-size: 12px; text-transform: capitalize; }
+    .s-executed { color: var(--low); }
+    .s-pending_approval { color: var(--medium); }
+    .s-rejected { color: var(--high); }
+    .s-rolled_back { color: var(--muted); }
   `],
 })
 export class IncidentDetailComponent implements OnInit {
@@ -118,15 +222,60 @@ export class IncidentDetailComponent implements OnInit {
   story = signal<AttackStep[]>([]);
   graph = signal<IncidentGraph>({ nodes: [], edges: [] });
   killchain = signal<KillChainPhase[]>([]);
+  analysis = signal<AssistantAnalysis | null>(null);
+  actions = signal<ResponseAction[]>([]);
+  actionError = '';
+
+  actionTypes = [
+    { type: 'firewall_block', label: 'Block source IP' },
+    { type: 'disable_account', label: 'Disable account' },
+    { type: 'stop_process', label: 'Stop process' },
+    { type: 'isolate_endpoint', label: 'Isolate endpoint' },
+    { type: 'create_ticket', label: 'Create ticket' },
+    { type: 'send_notification', label: 'Notify analyst' },
+  ];
 
   constructor(private route: ActivatedRoute, private api: ApiService) {}
 
+  private id = 0;
+
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.id = Number(this.route.snapshot.paramMap.get('id'));
+    const id = this.id;
     this.api.getIncident(id).subscribe(i => this.incident.set(i));
     this.api.incidentEvents(id).subscribe(ev => this.events.set(ev));
     this.api.incidentStory(id).subscribe(s => this.story.set(s));
     this.api.incidentGraph(id).subscribe(g => this.graph.set(g));
     this.api.incidentKillchain(id).subscribe(k => this.killchain.set(k));
+    this.api.incidentAnalysis(id).subscribe(a => this.analysis.set(a));
+    this.loadActions();
+  }
+
+  loadActions(): void {
+    this.api.incidentActions(this.id).subscribe(a => this.actions.set(a));
+  }
+
+  propose(type: string): void {
+    this.actionError = '';
+    this.api.proposeAction(this.id, type).subscribe({
+      next: () => this.loadActions(),
+      error: (e) => this.actionError = e?.error?.detail ?? 'Could not propose action.',
+    });
+  }
+
+  approve(a: ResponseAction): void {
+    this.actionError = '';
+    this.api.approveAction(a.id).subscribe({
+      next: () => this.loadActions(),
+      error: (e) => this.actionError = e?.error?.detail ?? 'Approval failed (Administrator required for High/Restricted).',
+    });
+  }
+
+  rollback(a: ResponseAction): void {
+    this.api.rollbackAction(a.id).subscribe({ next: () => this.loadActions() });
+  }
+
+  copy(text: string): void {
+    navigator.clipboard?.writeText(text);
   }
 }

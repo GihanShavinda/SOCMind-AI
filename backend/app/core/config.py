@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     BRUTEFORCE_FAILED_THRESHOLD: int = 5      # failures within the window -> alert
     BRUTEFORCE_WINDOW_SECONDS: int = 120      # correlation time window
 
+    # Optional LLM for the AI assistant (disabled by default — rule-based fallback).
+    LLM_PROVIDER: str = ""                     # "" | openai | anthropic | ollama
+    LLM_API_KEY: str = ""
+    LLM_MODEL: str = "gpt-4o-mini"
+    LLM_BASE_URL: str = ""
+    LLM_TIMEOUT: int = 20
+
     # Default seed admin (change in real deployments)
     SEED_ADMIN_EMAIL: str = "admin@socmind.io"
     SEED_ADMIN_PASSWORD: str = "ChangeMe123!"

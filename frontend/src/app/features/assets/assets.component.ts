@@ -10,6 +10,12 @@ import { Asset, Criticality } from '../../core/models';
   selector: 'app-assets',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  styles: [`
+    .toggle { background: var(--panel-hi); border: 1px solid var(--border); color: var(--muted);
+              border-radius: 999px; padding: 3px 12px; font-size: 12px; }
+    .toggle.on { background: rgba(63,185,80,.15); color: var(--low); border-color: var(--low); }
+    .toggle:disabled { opacity: .5; cursor: not-allowed; }
+  `],
   template: `
     <h1>Assets</h1>
     <p class="page-sub">Monitored endpoints and servers. Criticality feeds the automation decision engine.</p>
@@ -18,7 +24,7 @@ import { Asset, Criticality } from '../../core/models';
       <div class="card">
         <h2>Inventory</h2>
         <table>
-          <thead><tr><th>Host</th><th>OS</th><th>IP</th><th>Criticality</th><th>Agent</th></tr></thead>
+          <thead><tr><th>Host</th><th>OS</th><th>IP</th><th>Criticality</th><th>Agent</th><th>Auto-response</th></tr></thead>
           <tbody>
             <tr *ngFor="let a of assets()">
               <td>{{ a.hostname }}</td>
@@ -30,9 +36,19 @@ import { Asset, Criticality } from '../../core/models';
                   {{ a.agent_status }}
                 </span>
               </td>
+              <td>
+                <button class="toggle" [class.on]="a.automation_enabled"
+                        [disabled]="!canEdit()" (click)="toggleAuto(a)">
+                  {{ a.automation_enabled ? 'Enabled' : 'Disabled' }}
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
+        <p class="muted" style="font-size:11px; margin-top:10px">
+          Auto-response is opt-in per asset (FR-34). Even when enabled, only low-impact,
+          reversible actions on low-criticality assets can automate; everything else needs approval.
+        </p>
       </div>
 
       <div class="card" *ngIf="canEdit()">
@@ -71,6 +87,12 @@ export class AssetsComponent implements OnInit {
     this.api.createAsset(this.form).subscribe({
       next: () => { this.form = { criticality: 'Low' as Criticality, environment: 'lab' }; this.load(); },
       error: (e) => this.error = e?.error?.detail ?? 'Could not create asset.',
+    });
+  }
+
+  toggleAuto(a: Asset): void {
+    this.api.updateAsset(a.id, { automation_enabled: !a.automation_enabled }).subscribe({
+      next: () => this.load(),
     });
   }
 }

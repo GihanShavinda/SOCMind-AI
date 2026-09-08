@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.common import (
     TimestampMixin, Role, Criticality, Severity, IncidentStatus,
+    RiskLevel, ActionStatus, DecisionOutcome, utcnow,
 )
 
 
@@ -37,6 +38,11 @@ class Asset(Base, TimestampMixin):
         SAEnum(Criticality), default=Criticality.LOW
     )
     agent_status: Mapped[str] = mapped_column(String(20), default="offline")
+
+    # Per-asset automation policy (FR-34): automation is opt-in and can be
+    # restricted to specific action types. Feeds the decision engine (FR-8).
+    automation_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    auto_action_types: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     events: Mapped[list["Event"]] = relationship(back_populates="asset")
 
@@ -119,6 +125,40 @@ class AttackStep(Base):
     mitre_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
 
     incident: Mapped["Incident"] = relationship(back_populates="steps")
+
+
+class Decision(Base):
+    """Risk-aware human-in-the-loop decision for a proposed response (FR-32, FR-33)."""
+    __tablename__ = "decisions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    incident_id: Mapped[int] = mapped_column(ForeignKey("incidents.id"))
+    action_type: Mapped[str] = mapped_column(String(60))
+    threat_conf: Mapped[float] = mapped_column(Float, default=0.0)
+    response_conf: Mapped[float] = mapped_column(Float, default=0.0)
+    asset_crit: Mapped[str] = mapped_column(String(20), default="Low")
+    impact: Mapped[str] = mapped_column(String(20), default="Low")
+    outcome: Mapped[DecisionOutcome] = mapped_column(SAEnum(DecisionOutcome))
+    rationale: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Action(Base):
+    """A controlled, auditable, reversible-where-possible response (FR-35, FR-36)."""
+    __tablename__ = "actions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    incident_id: Mapped[int] = mapped_column(ForeignKey("incidents.id"))
+    decision_id: Mapped[int | None] = mapped_column(ForeignKey("decisions.id"), nullable=True)
+    type: Mapped[str] = mapped_column(String(60))
+    description: Mapped[str] = mapped_column(Text)
+    risk_level: Mapped[RiskLevel] = mapped_column(SAEnum(RiskLevel), default=RiskLevel.MEDIUM)
+    status: Mapped[ActionStatus] = mapped_column(SAEnum(ActionStatus), default=ActionStatus.PROPOSED)
+    reversible: Mapped[bool] = mapped_column(Boolean, default=True)
+    undo_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    performed_by: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class AuditLog(Base):

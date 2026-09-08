@@ -1,0 +1,24 @@
+name: Port Scan / Reconnaissance Response
+attack_type: port_scan
+mitre: [T1046]
+steps:
+  - order: 1
+    action: Confirm the scan pattern (source IP, ports, timing)
+    risk: Low
+    approval_required: false
+    expected_result: Verified scanning behaviour from one source
+  - order: 2
+    action: Check whether any scanned service accepted a connection
+    risk: Low
+    approval_required: false
+    expected_result: Determination of exposure
+  - order: 3
+    action: Block the scanning source IP at the firewall
+    risk: Medium
+    approval_required: true
+    expected_result: Source can no longer reach the host
+  - order: 4
+    action: Close the incident and generate the report
+    risk: Low
+    approval_required: false
+    expected_result: Documented, auditable case

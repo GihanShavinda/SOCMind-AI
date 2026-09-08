@@ -1,0 +1,33 @@
+# Approved investigation commands for Windows assets (FR-24/25/26).
+# PowerShell-based (FR-26 OS awareness). Read-only = Low.
+- id: win_verify_logon_success
+  os: windows
+  applies_to: [authentication_success, authentication_failure]
+  command: 'Get-WinEvent -FilterHashtable @{LogName="Security";Id=4624} -MaxEvents 20'
+  purpose: Check for successful logons (Event ID 4624)
+  why: Verifies whether the brute force resulted in a successful logon.
+  risk: Low
+
+- id: win_failed_logons
+  os: windows
+  applies_to: [authentication_failure]
+  command: 'Get-WinEvent -FilterHashtable @{LogName="Security";Id=4625} -MaxEvents 50'
+  purpose: Review failed logons (Event ID 4625)
+  why: Confirms the brute-force pattern, source and targeted accounts.
+  risk: Low
+
+- id: win_running_processes
+  os: windows
+  applies_to: [suspicious_process, authentication_success]
+  command: 'Get-Process | Sort-Object StartTime -Descending | Select-Object -First 30'
+  purpose: Inspect recently started processes
+  why: Surfaces unexpected processes started after access was gained.
+  risk: Low
+
+- id: win_network_connections
+  os: windows
+  applies_to: [outbound_connection, suspicious_process]
+  command: 'Get-NetTCPConnection -State Established | Select-Object LocalAddress,RemoteAddress,RemotePort,OwningProcess'
+  purpose: List established network connections
+  why: Reveals possible command-and-control or exfiltration channels.
+  risk: Low

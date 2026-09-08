@@ -47,3 +47,17 @@ class RiskLevel(str, enum.Enum):
     MEDIUM = "Medium"
     HIGH = "High"
     RESTRICTED = "Restricted"
+
+
+class ActionStatus(str, enum.Enum):
+    PROPOSED = "proposed"
+    PENDING_APPROVAL = "pending_approval"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    EXECUTED = "executed"
+    ROLLED_BACK = "rolled_back"
+
+
+class DecisionOutcome(str, enum.Enum):
+    AUTOMATE = "automate"
+    APPROVAL_REQUIRED = "approval_required"

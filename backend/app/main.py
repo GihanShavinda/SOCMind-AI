@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, assets, events, incidents, mitre
+from app.api import auth, assets, events, incidents, mitre, ai, response
 
 app = FastAPI(
     title="SOCMind AI",
@@ -24,13 +24,23 @@ app.include_router(events.router)
 app.include_router(incidents.router)
 app.include_router(incidents.audit_router)
 app.include_router(mitre.router)
+app.include_router(ai.router)
+app.include_router(response.router)
+app.include_router(response.actions_router)
+app.include_router(response.decisions_router)
 
 
 @app.on_event("startup")
 def _load_rules():
     from app.detection.engine import reload_rules
+    from app.ai.catalog import load_catalog
     count = reload_rules()
+    cmds = load_catalog()
+    from app.response.playbooks import load_playbooks
+    pbs = load_playbooks()
     print(f"[detection] loaded {count} rules")
+    print(f"[assistant] loaded {cmds} approved commands")
+    print(f"[response] loaded {pbs} playbooks")
 
 
 @app.get("/health", tags=["meta"])

@@ -1,0 +1,50 @@
+# Approved investigation commands for Linux assets (FR-24/25/26).
+# The AI may ONLY recommend commands from this catalog — never free-form text.
+# Each carries a purpose, rationale and risk level (FR-27). Read-only = Low.
+- id: linux_verify_ssh_success
+  os: linux
+  applies_to: [authentication_success, authentication_failure]
+  command: 'grep "Accepted" /var/log/auth.log'
+  purpose: Check for successful authentication
+  why: Repeated failed logins were followed by activity, so successful access must be verified.
+  risk: Low
+
+- id: linux_failed_auth_pattern
+  os: linux
+  applies_to: [authentication_failure]
+  command: 'grep "Failed password" /var/log/auth.log | tail -50'
+  purpose: Review the failed-authentication pattern
+  why: Confirms the brute-force source, targeted accounts and timing.
+  risk: Low
+
+- id: linux_recent_logins
+  os: linux
+  applies_to: [authentication_success]
+  command: 'last -a | head -20'
+  purpose: List recent successful logins
+  why: Identifies which accounts and source IPs actually established sessions.
+  risk: Low
+
+- id: linux_running_processes
+  os: linux
+  applies_to: [suspicious_process, authentication_success]
+  command: 'ps -eo pid,ppid,user,cmd --sort=-start_time | head -30'
+  purpose: Inspect recently started processes
+  why: Post-compromise activity often shows up as unexpected child processes.
+  risk: Low
+
+- id: linux_established_connections
+  os: linux
+  applies_to: [outbound_connection, suspicious_process]
+  command: 'ss -tunp state established'
+  purpose: List established network connections
+  why: Reveals possible command-and-control or exfiltration channels.
+  risk: Low
+
+- id: linux_port_scan_source
+  os: linux
+  applies_to: [network_connection]
+  command: 'ss -tan | awk "{print \$5}" | sort | uniq -c | sort -rn | head'
+  purpose: Summarise connection sources/ports
+  why: Helps confirm scanning behaviour against the host.
+  risk: Low

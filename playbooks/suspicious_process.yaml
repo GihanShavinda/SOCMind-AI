@@ -1,0 +1,24 @@
+name: Suspicious Process Response
+attack_type: suspicious_process
+mitre: [T1059]
+steps:
+  - order: 1
+    action: Review the process command line and parent process
+    risk: Low
+    approval_required: false
+    expected_result: Understanding of what executed and how
+  - order: 2
+    action: Inspect network connections opened by the process
+    risk: Low
+    approval_required: false
+    expected_result: Any C2/exfil channel identified
+  - order: 3
+    action: Stop the suspicious process
+    risk: Medium
+    approval_required: true
+    expected_result: Malicious process terminated
+  - order: 4
+    action: Isolate the endpoint if compromise is confirmed
+    risk: High
+    approval_required: true
+    expected_result: Host contained pending investigation
