@@ -21,8 +21,33 @@ import { Incident, Event, AttackStep, IncidentGraph, KillChainPhase, AssistantAn
         <button class="btn-ghost sm" (click)="api.downloadReport(i.id, 'pdf')">PDF</button>
         <button class="btn-ghost sm" (click)="api.downloadReport(i.id, 'csv')">CSV</button>
         <button class="btn-ghost sm" (click)="api.downloadReportJson(i.id)">JSON</button>
+        <button class="btn-ghost sm" (click)="api.downloadCasePackage(i.id)" title="Tamper-evident forensic package">Case pkg</button>
       </div>
       <p class="page-sub">Incident #{{ i.id }} · {{ i.status }} · confidence {{ (i.confidence*100)|number:'1.0-0' }}%</p>
+
+      <!-- Triage + SLA + analyst feedback (Phase 7) -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="triage-row">
+          <div class="metric">
+            <div class="m-val">{{ i.triage_score | number:'1.0-0' }}</div>
+            <div class="m-lbl">Triage score</div>
+          </div>
+          <div class="metric">
+            <div class="m-val" [style.color]="i.sla_breached ? 'var(--high)' : 'var(--low)'">
+              {{ i.sla_breached ? 'BREACHED' : 'On track' }}
+            </div>
+            <div class="m-lbl">SLA {{ i.sla_due_at ? ('· due ' + (i.sla_due_at | date:'short')) : '' }}</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="feedback">
+            <span class="muted" style="font-size:12px; margin-right:8px">Analyst verdict:</span>
+            <button class="btn-ghost sm" (click)="feedback('confirm')">Confirm</button>
+            <button class="btn-ghost sm" (click)="feedback('dismiss')">Dismiss (FP)</button>
+            <button class="btn-ghost sm" (click)="feedback('correct')">Correct</button>
+          </div>
+        </div>
+        <p *ngIf="feedbackMsg" style="color:var(--low); font-size:12px; margin:8px 0 0">{{ feedbackMsg }}</p>
+      </div>
 
       <!-- Kill-chain strip (FR-20) -->
       <div class="card" style="margin-bottom:16px">
@@ -147,6 +172,17 @@ import { Incident, Event, AttackStep, IncidentGraph, KillChainPhase, AssistantAn
           </div>
         </div>
 
+        <div class="ai-block" *ngIf="a.kb_note">
+          <div class="ai-label">Knowledge base</div>
+          <p>{{ a.kb_note }}</p>
+          <div class="kb-list" *ngIf="a.similar_incidents?.length">
+            <a class="kb-item" *ngFor="let s of a.similar_incidents" [routerLink]="['/incidents', s.id]">
+              #{{ s.id }} {{ s.title }}
+              <span class="muted" style="font-size:11px">— {{ s.resolution }}</span>
+            </a>
+          </div>
+        </div>
+
         <div class="ai-block">
           <div class="ai-label">Grounded on</div>
           <div class="grounding">
@@ -213,6 +249,14 @@ import { Incident, Event, AttackStep, IncidentGraph, KillChainPhase, AssistantAn
     .safe-note { font-size: 11px; margin-top: 14px; }
     .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
     .btn-ghost.sm { padding: 4px 10px; font-size: 12px; }
+    .triage-row { display: flex; align-items: center; gap: 24px; }
+    .triage-row .metric { text-align: center; }
+    .triage-row .m-val { font-size: 22px; font-weight: 700; }
+    .triage-row .m-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .feedback { display: flex; align-items: center; }
+    .kb-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .kb-item { background: var(--panel-hi); border-radius: 6px; padding: 8px 10px;
+               text-decoration: none; color: var(--accent); font-size: 13px; }
     .btn-ghost.sm { padding: 4px 10px; font-size: 12px; }
     .status { font-size: 12px; text-transform: capitalize; }
     .s-executed { color: var(--low); }
@@ -230,6 +274,7 @@ export class IncidentDetailComponent implements OnInit {
   analysis = signal<AssistantAnalysis | null>(null);
   actions = signal<ResponseAction[]>([]);
   actionError = '';
+  feedbackMsg = '';
 
   actionTypes = [
     { type: 'firewall_block', label: 'Block source IP' },
@@ -282,5 +327,15 @@ export class IncidentDetailComponent implements OnInit {
 
   copy(text: string): void {
     navigator.clipboard?.writeText(text);
+  }
+
+  feedback(verdict: string): void {
+    this.feedbackMsg = '';
+    this.api.incidentFeedback(this.id, verdict).subscribe({
+      next: () => {
+        this.feedbackMsg = `Recorded "${verdict}". Thanks — this tunes future detection.`;
+        this.api.getIncident(this.id).subscribe(i => this.incident.set(i));
+      },
+    });
   }
 }

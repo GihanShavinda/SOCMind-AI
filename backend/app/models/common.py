@@ -49,6 +49,12 @@ class RiskLevel(str, enum.Enum):
     RESTRICTED = "Restricted"
 
 
+class FeedbackVerdict(str, enum.Enum):
+    CONFIRM = "confirm"       # true positive
+    DISMISS = "dismiss"       # false positive
+    CORRECT = "correct"       # partially right; note explains
+
+
 class ActionStatus(str, enum.Enum):
     PROPOSED = "proposed"
     PENDING_APPROVAL = "pending_approval"

@@ -42,7 +42,10 @@ export class ApiService {
     return this.http.get<KillChainPhase[]>(`${this.base}/api/mitre/killchain`);
   }
   incidentAnalysis(id: number): Observable<AssistantAnalysis> {
-    return this.http.get<AssistantAnalysis>(`${this.base}/api/incidents/${id}/analysis`);
+    return this.http.get<AssistantAnalysis>(`${this.base}/api/incidents/${id}/assistant`);
+  }
+  incidentFeedback(id: number, verdict: string, note?: string): Observable<any> {
+    return this.http.post(`${this.base}/api/incidents/${id}/feedback`, { verdict, note });
   }
 
   // Response (Phase 5)
@@ -137,6 +140,39 @@ export class ApiService {
   }
   updateUser(id: number, patch: { role?: string; is_active?: boolean }): Observable<any> {
     return this.http.patch(`${this.base}/api/users/${id}`, patch);
+  }
+
+  // Advanced (Phase 8)
+  entityRisk(entity_type: string, value: string): Observable<any> {
+    return this.http.get<any>(`${this.base}/api/ueba/entity?entity_type=${entity_type}&value=${encodeURIComponent(value)}`);
+  }
+  riskTimeline(id: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/api/incidents/${id}/risk-timeline`);
+  }
+  runHunt(filters: any[], hours = 168): Observable<any> {
+    return this.http.post<any>(`${this.base}/api/hunt`, { filters, hours });
+  }
+  promoteHunt(name: string, filters: any[]): Observable<{ rule_yaml: string; note: string }> {
+    return this.http.post<{ rule_yaml: string; note: string }>(`${this.base}/api/hunt/promote`, { name, filters });
+  }
+  casePackage(id: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/api/incidents/${id}/case-package`);
+  }
+  modelCards(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/api/model-cards`);
+  }
+  calibration(): Observable<any> {
+    return this.http.get<any>(`${this.base}/api/calibration`);
+  }
+  downloadCasePackage(id: number): void {
+    this.casePackage(id).subscribe(pkg => {
+      const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `case-package-incident-${id}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
   }
 
   // Events (FR-9..11)

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.common import (
     TimestampMixin, Role, Criticality, Severity, IncidentStatus,
-    RiskLevel, ActionStatus, DecisionOutcome, utcnow,
+    RiskLevel, ActionStatus, DecisionOutcome, FeedbackVerdict, utcnow,
 )
 
 
@@ -103,6 +103,12 @@ class Incident(Base, TimestampMixin):
     related_count: Mapped[int] = mapped_column(Integer, default=0)
     asset_id: Mapped[int | None] = mapped_column(ForeignKey("assets.id"), nullable=True)
 
+    # Triage & SLA (Phase 7 / 8.5)
+    triage_score: Mapped[float] = mapped_column(Float, default=0.0)
+    sla_due_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     asset: Mapped["Asset"] = relationship()
     events: Mapped[list["Event"]] = relationship(back_populates="incident")
     alerts: Mapped[list["Alert"]] = relationship(back_populates="incident")
@@ -184,4 +190,17 @@ class PasswordResetToken(Base):
     token_hash: Mapped[str] = mapped_column(String(64), index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     used: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Feedback(Base):
+    """Analyst verdict on an incident — feeds active learning (8.8)."""
+    __tablename__ = "feedback"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    incident_id: Mapped[int] = mapped_column(ForeignKey("incidents.id"))
+    analyst: Mapped[str] = mapped_column(String(120))          # user email
+    verdict: Mapped[FeedbackVerdict] = mapped_column(SAEnum(FeedbackVerdict))
+    rule_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

@@ -67,6 +67,15 @@ def run_detection(db: Session, event: Event) -> Incident | None:
         if score > 0:
             incident = _handle_anomaly(db, event, score, reasons) or incident
 
+    # --- Phase 7: active-learning nudge + triage score + SLA on the incident ---
+    if incident is not None:
+        from app.detection import triage, learning
+        rule_id = learning.primary_rule_for_incident(db, incident.id)
+        adj = learning.rule_confidence_adjustment(db, rule_id)
+        if adj:
+            incident.confidence = max(0.05, min(0.99, incident.confidence + adj))
+        triage.apply_triage_and_sla(incident)
+
     db.flush()
     return incident
 

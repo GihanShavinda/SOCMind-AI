@@ -28,6 +28,8 @@ export const routes: Routes = [
 
       // --- Placeholder shells (backend lands in later phases) ---
       { path: 'mitre', loadComponent: () => import('./features/mitre/mitre.component').then(m => m.MitreComponent) },
+      { path: 'hunting', loadComponent: () => import('./features/hunting/hunting.component').then(m => m.HuntingComponent) },
+      { path: 'model-cards', loadComponent: () => import('./features/model-cards/model-cards.component').then(m => m.ModelCardsComponent) },
       { path: 'decision', loadComponent: () => import('./features/decision-panel/decision-panel.component').then(m => m.DecisionPanelComponent) },
       { path: 'playbooks', loadComponent: () => import('./features/playbooks/playbooks.component').then(m => m.PlaybooksComponent) },
       {

@@ -56,7 +56,7 @@ Legend — **Status**: ✅ working now · 🟡 shell present, backend in later p
 |----|-------------|----------|---------|-------|--------|
 | FR-21 | Contextual input to assistant | Incident detail — AI panel | AI module | P4 | ✅ |
 | FR-22 | Structured output (what/why/next) | Incident detail — AI panel | AI module | P4 | ✅ |
-| FR-23 | Grounding (evidence + KB) | AI panel — grounded_on | `ai/assistant.py` (vector RAG = P7) | P4/P7 | 🟡 |
+| FR-23 | Grounding (evidence + KB) | AI panel — grounded_on + Similar | `ai/rag.py` retrieval | P7 | ✅ |
 | FR-24 | Investigation commands | Incident detail | command recommender | P4 | ✅ |
 | FR-25 | Command explanation | Incident detail | recommender | P4 | ✅ |
 | FR-26 | OS awareness | — | recommender | P4 | ✅ |
@@ -99,3 +99,20 @@ Legend — **Status**: ✅ working now · 🟡 shell present, backend in later p
 
 Every FR appears exactly once above. As you complete each phase, flip its rows to
 ✅ — the matrix doubles as your progress tracker and examiner checklist.
+
+---
+
+## Section 8 — Advanced Enhancements status
+
+| # | Enhancement | Status | Where |
+|---|-------------|--------|-------|
+| 8.1 | Threat-intel enrichment + IOC | ✅ | `intel/enrichment.py` + IOC feed (P6/P7) |
+| 8.2 | RAG knowledge base | ✅ | `ai/rag.py` (P7) |
+| 8.3 | UEBA — entity risk + timeline | ✅ | `ueba/scoring.py` (P8) |
+| 8.4 | Threat hunting workspace | ✅ | `hunting/engine.py` + screen (P8) |
+| 8.5 | Triage scoring + SLA | ✅ | `detection/triage.py` (P7) |
+| 8.6 | Forensics + chain of custody | ✅ | `forensics/custody.py` (P8) |
+| 8.7 | Honeypot / honeytoken signals | ⬜ | needs honeypot host (optional) |
+| 8.8 | Analyst feedback + active learning | ✅ | `detection/learning.py` (P7) |
+| 8.9 | Purple-team simulation harness | ✅ | `scripts/demo_scenarios.py` + lab guide |
+| 8.10 | Confidence calibration + model cards | ✅ | `ai/model_cards.py` (P8) |

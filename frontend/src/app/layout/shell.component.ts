@@ -27,7 +27,9 @@ import { AuthService } from '../core/services/auth.service';
 
           <div class="nav-group">Analysis</div>
           <a routerLink="/mitre" routerLinkActive="active">MITRE ATT&amp;CK</a>
+          <a routerLink="/hunting" routerLinkActive="active">Threat Hunting</a>
           <a routerLink="/decision" routerLinkActive="active">Decision Panel</a>
+          <a routerLink="/model-cards" routerLinkActive="active">Model Cards</a>
 
           <div class="nav-group">Response</div>
           <a routerLink="/playbooks" routerLinkActive="active">Playbooks</a>

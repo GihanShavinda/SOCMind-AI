@@ -39,17 +39,11 @@ def build_context(db: Session, incident: Incident) -> dict:
     asset = incident.asset
     os_name = asset.os if asset else "linux"
 
-    # Grounding: similar past incidents by shared MITRE technique (lightweight KB;
-    # a vector store is the Phase 7 enhancement).
-    mitre_ids = [s.mitre_id for s in steps if s.mitre_id]
-    similar = []
-    if mitre_ids:
-        similar = (
-            db.query(Incident)
-            .join(AttackStep, AttackStep.incident_id == Incident.id)
-            .filter(AttackStep.mitre_id.in_(mitre_ids), Incident.id != incident.id)
-            .distinct().limit(3).all()
-        )
+    # Grounding: retrieve similar past incidents from the local knowledge base
+    # (FR-23 / 8.2). Scored by shared MITRE techniques, event types and title.
+    from app.ai.rag import retrieve_similar, kb_citation
+    similar = retrieve_similar(db, incident, top_k=3)
+    kb_note = kb_citation(similar)
 
     return {
         "incident": incident,
@@ -61,7 +55,9 @@ def build_context(db: Session, incident: Incident) -> dict:
         "asset": asset,
         "os_name": os_name,
         "similar": similar,
-        "grounded_on": _evidence_refs(incident, events, steps, asset, similar),
+        "kb_note": kb_note,
+        "grounded_on": _evidence_refs(incident, events, steps, asset, similar)
+                       + ([kb_note] if kb_note else []),
     }
 
 
@@ -192,6 +188,8 @@ def _llm_analysis(ctx: dict) -> dict | None:
         "grounded_on": ctx["grounded_on"],
         "source": "llm",
         "model": f"{llm.settings.LLM_PROVIDER}:{llm.settings.LLM_MODEL}",
+        "similar_incidents": ctx["similar"],
+        "kb_note": ctx.get("kb_note"),
     }
 
 
@@ -200,6 +198,11 @@ def analyse(db: Session, incident: Incident) -> dict:
     if llm.is_enabled():
         result = _llm_analysis(ctx)
         if result is not None:
+            result["similar_incidents"] = ctx["similar"]
+            result["kb_note"] = ctx.get("kb_note")
             return result
     # Default path / graceful degradation.
-    return _fallback_analysis(ctx)
+    result = _fallback_analysis(ctx)
+    result["similar_incidents"] = ctx["similar"]
+    result["kb_note"] = ctx.get("kb_note")
+    return result

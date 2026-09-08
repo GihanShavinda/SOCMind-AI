@@ -162,6 +162,34 @@ class IncidentOut(BaseModel):
     related_count: int
     asset_id: int | None
     created_at: datetime
+    triage_score: float = 0.0
+    sla_due_at: datetime | None = None
+    sla_breached: bool = False
+
+
+class SimilarIncident(BaseModel):
+    id: int
+    title: str
+    severity: str
+    status: str
+    score: float
+    shared_techniques: list[str]
+    resolution: str
+
+
+class FeedbackIn(BaseModel):
+    verdict: str            # confirm | dismiss | correct
+    note: str | None = None
+
+
+class FeedbackOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    incident_id: int
+    analyst: str
+    verdict: str
+    note: str | None
+    created_at: datetime | None
 
 
 class AttackStepOut(BaseModel):
@@ -231,6 +259,8 @@ class AssistantAnalysis(BaseModel):
     grounded_on: list[str]
     source: str          # "rule-based" | "llm"
     model: str | None = None
+    similar_incidents: list[SimilarIncident] = []
+    kb_note: str | None = None
 
 
 class AuditOut(BaseModel):

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, assets, events, incidents, mitre, ai, response, reports, users
+from app.api import auth, assets, events, incidents, mitre, ai, response, reports, users, advanced
 
 app = FastAPI(
     title="SOCMind AI",
@@ -30,6 +30,7 @@ app.include_router(response.actions_router)
 app.include_router(response.decisions_router)
 app.include_router(reports.router)
 app.include_router(users.router)
+app.include_router(advanced.router)
 
 
 @app.on_event("startup")

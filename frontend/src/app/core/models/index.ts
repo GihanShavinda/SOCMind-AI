@@ -54,6 +54,19 @@ export interface Incident {
   related_count: number;
   asset_id: number | null;
   created_at: string;
+  triage_score?: number;
+  sla_due_at?: string | null;
+  sla_breached?: boolean;
+}
+
+export interface SimilarIncident {
+  id: number;
+  title: string;
+  severity: string;
+  status: string;
+  score: number;
+  shared_techniques: string[];
+  resolution: string;
 }
 
 export interface AttackStep {
@@ -119,6 +132,8 @@ export interface AssistantAnalysis {
   grounded_on: string[];
   source: string;        // "rule-based" | "llm"
   model: string | null;
+  similar_incidents?: SimilarIncident[];
+  kb_note?: string | null;
 }
 
 export interface PlaybookStep {
