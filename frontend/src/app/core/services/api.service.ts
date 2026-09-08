@@ -114,6 +114,31 @@ export class ApiService {
     return this.http.post(`${this.base}/api/auth/mfa/disable`, { code });
   }
 
+  // Account & profile (FR-1)
+  forgotPassword(email: string): Observable<{ message: string; dev_reset_link: string | null }> {
+    return this.http.post<{ message: string; dev_reset_link: string | null }>(
+      `${this.base}/api/auth/forgot-password`, { email });
+  }
+  resetPassword(token: string, new_password: string): Observable<any> {
+    return this.http.post(`${this.base}/api/auth/reset-password`, { token, new_password });
+  }
+  changePassword(current_password: string, new_password: string): Observable<any> {
+    return this.http.post(`${this.base}/api/auth/change-password`, { current_password, new_password });
+  }
+  updateProfile(name: string): Observable<any> {
+    return this.http.patch(`${this.base}/api/auth/me`, { name });
+  }
+  // Admin user management (FR-1, FR-3)
+  listUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/api/users`);
+  }
+  createUser(body: { name: string; email: string; password: string; role: string }): Observable<any> {
+    return this.http.post(`${this.base}/api/users`, body);
+  }
+  updateUser(id: number, patch: { role?: string; is_active?: boolean }): Observable<any> {
+    return this.http.patch(`${this.base}/api/users/${id}`, patch);
+  }
+
   // Events (FR-9..11)
   listEvents(limit = 100): Observable<Event[]> {
     return this.http.get<Event[]>(`${this.base}/api/events?limit=${limit}`);

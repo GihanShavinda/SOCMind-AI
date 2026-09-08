@@ -173,3 +173,15 @@ class AuditLog(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     before: Mapped[str | None] = mapped_column(Text, nullable=True)
     after: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class PasswordResetToken(Base):
+    """Single-use, time-limited password reset token (FR-1). Stored hashed."""
+    __tablename__ = "password_reset_tokens"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    token_hash: Mapped[str] = mapped_column(String(64), index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

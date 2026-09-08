@@ -42,6 +42,13 @@ services:
       LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
       LLM_BASE_URL: ${LLM_BASE_URL:-}
       LLM_TIMEOUT: ${LLM_TIMEOUT:-20}
+      EMAIL_MODE: ${EMAIL_MODE:-console}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-socmind@localhost}
     ports:
       - "8000:8000"
     volumes:

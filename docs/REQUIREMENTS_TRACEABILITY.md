@@ -10,8 +10,8 @@ Legend — **Status**: ✅ working now · 🟡 shell present, backend in later p
 ## Identity, Authentication & Access Control
 | FR | Requirement | Frontend | Backend | Phase | Status |
 |----|-------------|----------|---------|-------|--------|
-| FR-1 | Registration & login | Login screen | `/api/auth/login`, `/refresh`, `/me` | P1 | ✅ |
-| FR-2 | Multi-factor auth (TOTP) | (Profile — later) | `mfa_enabled` field stubbed | P1/P7 | ⬜ |
+| FR-1 | Registration (admin), login, password reset, profile | Login/Forgot/Reset/Settings/Users | auth + users routers | P1/P6 | ✅ |
+| FR-2 | Multi-factor auth (TOTP) | Settings + login | `core/totp.py` + auth MFA endpoints | P6 | ✅ |
 | FR-3 | Role-based access control | Route guards, conditional UI | `require_role` dependency | P1 | ✅ |
 | FR-4 | Session security (access/refresh tokens) | Auth interceptor | JWT access + refresh | P1 | ✅ |
 
@@ -21,15 +21,15 @@ Legend — **Status**: ✅ working now · 🟡 shell present, backend in later p
 | FR-5 | Asset inventory (add/edit/retire) | Assets screen | `/api/assets` CRUD | P1 | ✅ |
 | FR-6 | Asset attributes (OS/IP/owner/criticality) | Assets form | Asset model | P1 | ✅ |
 | FR-7 | Agent status | Assets table badge | `agent_status` field | P1 | ✅ |
-| FR-8 | Business context feeds automation | (Decision engine input) | `criticality` on Asset | P1/P5 | 🟡 |
+| FR-8 | Business context feeds automation | Assets — auto toggle | criticality → decision engine | P5 | ✅ |
 
 ## Collection, Normalisation & Storage
 | FR | Requirement | Frontend | Backend | Phase | Status |
 |----|-------------|----------|---------|-------|--------|
-| FR-9 | Windows collection | — | Windows collector | P1/P2 | ⬜ |
+| FR-9 | Windows collection | — | `collectors/windows/authlog_collector.ps1` | P6 | ✅ |
 | FR-10 | Linux collection | — | `collectors/linux/authlog_collector.py` | P1 | ✅ |
 | FR-11 | Normalisation to unified schema | — | `services/ingest.py` | P1 | ✅ |
-| FR-12 | Enrichment (geo/reputation/baselines) | — | Threat-intel module | P7 | ⬜ |
+| FR-12 | Enrichment (geo/reputation) | Report reputation col | `intel/enrichment.py` + IOC feed | P6 | ✅ |
 
 ## Detection Engine
 | FR | Requirement | Frontend | Backend | Phase | Status |
@@ -46,48 +46,48 @@ Legend — **Status**: ✅ working now · 🟡 shell present, backend in later p
 | FR-14 | Incident creation w/ confidence | Incidents list | Incident model | P1 | ✅ |
 | FR-15 | De-duplication | — | engine (reuses open incident) | P1 | ✅ |
 | FR-16 | Timeline narrative | Incident detail — story timeline | AttackStep + `/story` | P2/P3 | ✅ |
-| FR-17 | Interactive attack graph | Incident detail | graph builder | P3 | ⬜ |
-| FR-18 | Plain-language assessment | Incident detail — story | attack steps | P2/P3 | 🟡 |
-| FR-19 | MITRE technique mapping | Story tags + MITRE screen | `detection/mitre.py` | P2/P3 | 🟡 |
-| FR-20 | Kill-chain view | MITRE screen | mapper | P3 | 🟡 |
+| FR-17 | Interactive attack graph | Incident detail — SVG graph | `detection/graph.py` + `/graph` | P3 | ✅ |
+| FR-18 | Plain-language assessment | Incident detail — story + graph | attack steps | P3 | ✅ |
+| FR-19 | MITRE technique mapping | Story tags + MITRE screen | `detection/mitre.py` | P3 | ✅ |
+| FR-20 | Kill-chain view | MITRE screen + incident strip | `/killchain` + `/mitre/killchain` | P3 | ✅ |
 
 ## AI Assistant & Commands
 | FR | Requirement | Frontend | Backend | Phase | Status |
 |----|-------------|----------|---------|-------|--------|
-| FR-21 | Contextual input to assistant | Incident detail — AI panel | AI module | P4 | 🟡 |
-| FR-22 | Structured output (what/why/next) | Incident detail — AI panel | AI module | P4 | 🟡 |
-| FR-23 | Grounding (RAG) | — | vector store | P4/P7 | ⬜ |
-| FR-24 | Investigation commands | Incident detail | command recommender | P4 | ⬜ |
-| FR-25 | Command explanation | Incident detail | recommender | P4 | ⬜ |
-| FR-26 | OS awareness | — | recommender | P4 | ⬜ |
+| FR-21 | Contextual input to assistant | Incident detail — AI panel | AI module | P4 | ✅ |
+| FR-22 | Structured output (what/why/next) | Incident detail — AI panel | AI module | P4 | ✅ |
+| FR-23 | Grounding (evidence + KB) | AI panel — grounded_on | `ai/assistant.py` (vector RAG = P7) | P4/P7 | 🟡 |
+| FR-24 | Investigation commands | Incident detail | command recommender | P4 | ✅ |
+| FR-25 | Command explanation | Incident detail | recommender | P4 | ✅ |
+| FR-26 | OS awareness | — | recommender | P4 | ✅ |
 
 ## Command Safety & Response
 | FR | Requirement | Frontend | Backend | Phase | Status |
 |----|-------------|----------|---------|-------|--------|
-| FR-27 | Risk classification | Playbooks (risk badges) | safety engine | P4/P5 | 🟡 |
-| FR-28 | Playbook validation | — | safety engine | P4 | ⬜ |
-| FR-29 | Guardrails (no blind execution) | — | safety engine | P4 | ⬜ |
-| FR-30 | Structured playbooks | Playbooks screen | `playbooks/*.yaml` + engine | P1/P5 | 🟡 |
-| FR-31 | Adaptive selection | Playbooks screen | playbook engine | P5 | ⬜ |
+| FR-27 | Risk classification | Playbooks (risk badges) | safety engine | P4/P5 | ✅ |
+| FR-28 | Playbook validation | — | safety engine | P4 | ✅ |
+| FR-29 | Guardrails (no blind execution) | — | safety engine | P4 | ✅ |
+| FR-30 | Structured playbooks | Playbooks screen | `playbooks/*.yaml` + `response/playbooks.py` | P5 | ✅ |
+| FR-31 | Adaptive selection | Playbooks screen | `select_for_incident` | P5 | ✅ |
 
 ## Human-in-the-Loop & Actions
 | FR | Requirement | Frontend | Backend | Phase | Status |
 |----|-------------|----------|---------|-------|--------|
-| FR-32 | Decision inputs | Decision panel | decision engine | P5 | 🟡 |
-| FR-33 | Decision output + reasoning | Decision panel | decision engine | P5 | 🟡 |
-| FR-34 | Per-asset automation policy | Assets / Approvals | policy on Asset | P5 | ⬜ |
+| FR-32 | Decision inputs | Decision panel | `response/decision.py` | P5 | ✅ |
+| FR-33 | Decision output + reasoning | Decision panel | `response/decision.py` | P5 | ✅ |
+| FR-34 | Per-asset automation policy | Assets — auto toggle | `automation_enabled`/`auto_action_types` | P5 | ✅ |
 | FR-35 | Audit on every action | Audit screen | `audit/logger.py` | P1 | ✅ |
-| FR-36 | Reversibility | — | Action.undo_ref | P5 | ⬜ |
+| FR-36 | Reversibility | Incident — Undo action | `rollback_action` + undo_ref | P5 | ✅ |
 
 ## Explainability, Dashboards & Surfaces
 | FR | Requirement | Frontend | Backend | Phase | Status |
 |----|-------------|----------|---------|-------|--------|
-| FR-37 | Explainable decision panel | Decision panel | decision engine | P5 | 🟡 |
+| FR-37 | Explainable decision panel | Decision Panel screen | `response/decision.py` rationale | P5 | ✅ |
 | FR-38 | Real-time dashboard | Dashboard | incidents API (+ WebSocket P6) | P1/P6 | ✅ |
 | FR-39 | Investigation workspace | Incident detail | incident APIs | P1 | ✅ |
 | FR-40 | Mobile app | (Flutter — separate) | same APIs | P6 | ⬜ |
-| FR-41 | Reporting | Reports screen | report generator | P6 | 🟡 |
-| FR-42 | Export PDF/CSV/JSON | Reports screen | exporters | P6 | 🟡 |
+| FR-41 | Reporting | Reports screen + incident export | `reporting/builder.py` | P6 | ✅ |
+| FR-42 | Export PDF/CSV/JSON | Reports/incident buttons | `reporting/exporters.py` | P6 | ✅ |
 
 ---
 

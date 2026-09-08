@@ -11,9 +11,27 @@ import { AuthService } from '../../core/services/auth.service';
   imports: [CommonModule, FormsModule],
   template: `
     <h1>Settings</h1>
-    <p class="page-sub">Account security.</p>
+    <p class="page-sub">Account security and profile.</p>
 
-    <div class="card" style="max-width:560px">
+    <div class="grid grid-2" style="align-items:start">
+      <div class="card">
+        <h2>Profile</h2>
+        <label>Display name</label>
+        <input [(ngModel)]="name" placeholder="Your name" />
+        <button class="btn" style="margin-top:16px" (click)="saveProfile()">Save name</button>
+        <p *ngIf="profileMsg" style="color:var(--low); font-size:13px; margin-top:10px">{{ profileMsg }}</p>
+
+        <h2 style="margin-top:24px">Change password</h2>
+        <label>Current password</label>
+        <input [(ngModel)]="curPw" type="password" />
+        <label>New password</label>
+        <input [(ngModel)]="newPw" type="password" placeholder="At least 8 characters" />
+        <button class="btn" style="margin-top:16px" (click)="changePw()">Update password</button>
+        <p class="error" *ngIf="pwError">{{ pwError }}</p>
+        <p *ngIf="pwMsg" style="color:var(--low); font-size:13px; margin-top:10px">{{ pwMsg }}</p>
+      </div>
+
+      <div class="card" style="max-width:560px">
       <h2>Multi-factor authentication (TOTP)</h2>
       <p class="muted" *ngIf="auth.user() as u">
         Status: <strong [style.color]="u.mfa_enabled ? 'var(--low)' : 'var(--muted)'">
@@ -44,6 +62,7 @@ import { AuthService } from '../../core/services/auth.service';
 
       <p class="error" *ngIf="error">{{ error }}</p>
       <p *ngIf="msg" style="color:var(--low); font-size:13px; margin-top:12px">{{ msg }}</p>
+      </div>
     </div>
   `,
   styles: [`
@@ -60,7 +79,32 @@ export class SettingsComponent {
   error = '';
   msg = '';
 
-  constructor(private api: ApiService, public auth: AuthService) {}
+  name = '';
+  curPw = '';
+  newPw = '';
+  profileMsg = '';
+  pwMsg = '';
+  pwError = '';
+
+  constructor(private api: ApiService, public auth: AuthService) {
+    this.name = this.auth.user()?.name ?? '';
+  }
+
+  saveProfile(): void {
+    this.profileMsg = '';
+    this.api.updateProfile(this.name).subscribe({
+      next: () => { this.profileMsg = 'Name updated.'; this.auth.loadCurrentUser().subscribe(); },
+    });
+  }
+
+  changePw(): void {
+    this.pwError = ''; this.pwMsg = '';
+    if (this.newPw.length < 8) { this.pwError = 'New password must be at least 8 characters.'; return; }
+    this.api.changePassword(this.curPw, this.newPw).subscribe({
+      next: () => { this.pwMsg = 'Password changed.'; this.curPw = ''; this.newPw = ''; },
+      error: (e) => this.pwError = e?.error?.detail ?? 'Could not change password.',
+    });
+  }
 
   enabled(): boolean { return !!this.auth.user()?.mfa_enabled; }
 

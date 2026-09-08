@@ -36,6 +36,7 @@ import { AuthService } from '../core/services/auth.service';
           <div class="nav-group">Records</div>
           <a routerLink="/audit" routerLinkActive="active">Audit Trail</a>
           <a routerLink="/reports" routerLinkActive="active">Reports</a>
+          <a *ngIf="auth.hasRole('Administrator')" routerLink="/users" routerLinkActive="active">Users</a>
         </nav>
       </aside>
 

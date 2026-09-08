@@ -1,9 +1,9 @@
 from app.models.entities import (
-    User, Asset, Event, Alert, Incident, AttackStep,
-    Decision, Action, AuditLog,
+    User, Asset, Event, Alert, Incident, AttackStep, Decision, Action,
+    AuditLog, PasswordResetToken,
 )
 
 __all__ = [
     "User", "Asset", "Event", "Alert", "Incident", "AttackStep",
-    "Decision", "Action", "AuditLog",
+    "Decision", "Action", "AuditLog", "PasswordResetToken",
 ]

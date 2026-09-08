@@ -32,5 +32,15 @@ class Settings(BaseSettings):
     SEED_ADMIN_EMAIL: str = "admin@socmind.io"
     SEED_ADMIN_PASSWORD: str = "ChangeMe123!"
 
+    # Password reset / email (FR-1). EMAIL_MODE: "console" (dev, logs link) or "smtp".
+    EMAIL_MODE: str = "console"
+    APP_BASE_URL: str = "http://localhost:4200"     # used to build reset links
+    RESET_TOKEN_EXPIRE_MINUTES: int = 30
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = "socmind@localhost"
+
 
 settings = Settings()

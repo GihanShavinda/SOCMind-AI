@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="wrap">
       <div class="card login">
@@ -37,6 +37,9 @@ import { AuthService } from '../../core/services/auth.service';
 
         <p class="error" *ngIf="error">{{ error }}</p>
         <p class="hint muted">Default lab admin: admin&#64;socmind.io / ChangeMe123!</p>
+        <p style="text-align:center; margin-top:10px">
+          <a routerLink="/forgot-password" class="muted" style="font-size:12px; text-decoration:none">Forgot password?</a>
+        </p>
       </div>
     </div>
   `,

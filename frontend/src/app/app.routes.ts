@@ -9,6 +9,8 @@ import { authGuard, roleGuard } from './core/guards/auth.guard';
  */
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./features/login/login.component').then(m => m.LoginComponent) },
+  { path: 'forgot-password', loadComponent: () => import('./features/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent) },
+  { path: 'reset-password', loadComponent: () => import('./features/reset-password/reset-password.component').then(m => m.ResetPasswordComponent) },
 
   {
     path: '',
@@ -35,6 +37,11 @@ export const routes: Routes = [
       },
       { path: 'reports', loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent) },
       { path: 'settings', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent) },
+      {
+        path: 'users',
+        canActivate: [roleGuard('Administrator')],
+        loadComponent: () => import('./features/users/users.component').then(m => m.UsersComponent),
+      },
     ],
   },
 

@@ -31,6 +31,42 @@ class MfaCodeIn(BaseModel):
     code: str
 
 
+# ---- Password reset & profile (FR-1) ----
+class ForgotPasswordIn(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordOut(BaseModel):
+    message: str
+    dev_reset_link: str | None = None   # only populated in console/dev email mode
+
+
+class ResetPasswordIn(BaseModel):
+    token: str
+    new_password: str
+
+
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class ProfileUpdateIn(BaseModel):
+    name: str
+
+
+class AdminUserCreate(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    role: Role = Role.ANALYST
+
+
+class AdminUserUpdate(BaseModel):
+    role: Role | None = None
+    is_active: bool | None = None
+
+
 # ---- Users ----
 class UserCreate(BaseModel):
     name: str
