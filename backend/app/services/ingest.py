@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.models import Event, Asset
 from app.schemas import EventIn, IngestResult
 from app.detection.engine import run_detection
+from app.intel.enrichment import enrich_ip
 
 
 def ingest_event(db: Session, payload: EventIn) -> IngestResult:
@@ -12,6 +13,12 @@ def ingest_event(db: Session, payload: EventIn) -> IngestResult:
     # Resolve asset by hostname (assets are pre-registered per the assumptions).
     asset = db.query(Asset).filter(Asset.hostname == payload.asset).first()
 
+    # Enrichment (FR-12): annotate the source IP with reputation/geo/IOC context.
+    attributes = dict(payload.attributes or {})
+    enrichment = enrich_ip(payload.source_ip)
+    if enrichment:
+        attributes["enrichment"] = enrichment
+
     event = Event(
         asset_id=asset.id if asset else None,
         timestamp=payload.timestamp,
@@ -20,7 +27,7 @@ def ingest_event(db: Session, payload: EventIn) -> IngestResult:
         username=payload.username,
         severity=payload.severity,
         raw_ref=payload.raw_ref,
-        attributes=payload.attributes,
+        attributes=attributes or None,
     )
     db.add(event)
     db.flush()  # assign event.id before detection

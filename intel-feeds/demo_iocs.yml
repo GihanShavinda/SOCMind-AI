@@ -1,0 +1,18 @@
+# Local IOC feed (detection-as-code style). Offline threat-intel for the lab.
+# In production these would sync from AbuseIPDB / VirusTotal / MISP (Section 8.1).
+indicators:
+  - value: 203.0.113.7          # TEST-NET-3 (RFC 5737) — safe demo "bad" IP
+    type: ip
+    verdict: malicious
+    source: demo-feed
+    note: Known brute-force source in lab scenarios
+  - value: 198.51.100.0/24      # TEST-NET-2 — demo suspicious range
+    type: cidr
+    verdict: suspicious
+    source: demo-feed
+    note: Scanning activity observed from this range
+  - value: 185.234.1.9
+    type: ip
+    verdict: malicious
+    source: demo-feed
+    note: Simulated C2 endpoint

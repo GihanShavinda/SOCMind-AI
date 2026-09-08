@@ -47,6 +47,7 @@ import { AuthService } from '../core/services/auth.service';
               <div class="user-name">{{ u.name }}</div>
               <div class="user-role">{{ u.role }}</div>
             </div>
+            <a routerLink="/settings" class="btn-ghost" style="text-decoration:none">Settings</a>
             <button class="btn-ghost" (click)="logout()">Sign out</button>
           </div>
         </header>

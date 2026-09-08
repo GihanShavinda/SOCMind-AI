@@ -78,6 +78,42 @@ export class ApiService {
     return this.http.patch<Asset>(`${this.base}/api/assets/${id}`, patch);
   }
 
+  // Reports (Phase 6)
+  incidentReport(id: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/api/incidents/${id}/report`);
+  }
+  downloadReport(id: number, fmt: 'csv' | 'pdf'): void {
+    const url = `${this.base}/api/incidents/${id}/report.${fmt}`;
+    this.http.get(url, { responseType: 'blob' }).subscribe(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `incident-${id}.${fmt}`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+  downloadReportJson(id: number): void {
+    this.incidentReport(id).subscribe(r => {
+      const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `incident-${id}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  // MFA (Phase 6)
+  mfaSetup(): Observable<{ secret: string; otpauth_uri: string }> {
+    return this.http.post<{ secret: string; otpauth_uri: string }>(`${this.base}/api/auth/mfa/setup`, {});
+  }
+  mfaEnable(code: string): Observable<any> {
+    return this.http.post(`${this.base}/api/auth/mfa/enable`, { code });
+  }
+  mfaDisable(code: string): Observable<any> {
+    return this.http.post(`${this.base}/api/auth/mfa/disable`, { code });
+  }
+
   // Events (FR-9..11)
   listEvents(limit = 100): Observable<Event[]> {
     return this.http.get<Event[]>(`${this.base}/api/events?limit=${limit}`);

@@ -17,6 +17,10 @@ import { Incident, Event, AttackStep, IncidentGraph, KillChainPhase, AssistantAn
       <div style="display:flex; align-items:center; gap:14px; margin:14px 0 4px">
         <h1 style="margin:0">{{ i.title }}</h1>
         <span class="badge sev-{{ i.severity }}">{{ i.severity }}</span>
+        <span style="flex:1"></span>
+        <button class="btn-ghost sm" (click)="api.downloadReport(i.id, 'pdf')">PDF</button>
+        <button class="btn-ghost sm" (click)="api.downloadReport(i.id, 'csv')">CSV</button>
+        <button class="btn-ghost sm" (click)="api.downloadReportJson(i.id)">JSON</button>
       </div>
       <p class="page-sub">Incident #{{ i.id }} · {{ i.status }} · confidence {{ (i.confidence*100)|number:'1.0-0' }}%</p>
 
@@ -209,6 +213,7 @@ import { Incident, Event, AttackStep, IncidentGraph, KillChainPhase, AssistantAn
     .safe-note { font-size: 11px; margin-top: 14px; }
     .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
     .btn-ghost.sm { padding: 4px 10px; font-size: 12px; }
+    .btn-ghost.sm { padding: 4px 10px; font-size: 12px; }
     .status { font-size: 12px; text-transform: capitalize; }
     .s-executed { color: var(--low); }
     .s-pending_approval { color: var(--medium); }
@@ -235,7 +240,7 @@ export class IncidentDetailComponent implements OnInit {
     { type: 'send_notification', label: 'Notify analyst' },
   ];
 
-  constructor(private route: ActivatedRoute, private api: ApiService) {}
+  constructor(private route: ActivatedRoute, public api: ApiService) {}
 
   private id = 0;
 

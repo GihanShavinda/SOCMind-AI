@@ -26,6 +26,11 @@ import { AuthService } from '../../core/services/auth.service';
         <label>Password</label>
         <input [(ngModel)]="password" type="password" placeholder="••••••••" (keyup.enter)="submit()" />
 
+        <div *ngIf="mfaRequired">
+          <label>MFA code</label>
+          <input [(ngModel)]="otp" placeholder="123456" maxlength="6" (keyup.enter)="submit()" />
+        </div>
+
         <button class="btn" style="width:100%; margin-top:22px" [disabled]="loading" (click)="submit()">
           {{ loading ? 'Signing in…' : 'Sign in' }}
         </button>
@@ -48,6 +53,8 @@ import { AuthService } from '../../core/services/auth.service';
 export class LoginComponent {
   email = 'admin@socmind.io';
   password = 'ChangeMe123!';
+  otp = '';
+  mfaRequired = false;
   loading = false;
   error = '';
 
@@ -56,7 +63,7 @@ export class LoginComponent {
   submit(): void {
     this.error = '';
     this.loading = true;
-    this.auth.login(this.email, this.password).subscribe({
+    this.auth.login(this.email, this.password, this.otp || undefined).subscribe({
       next: () => {
         this.auth.loadCurrentUser().subscribe({
           next: () => { this.loading = false; this.router.navigate(['/dashboard']); },
@@ -65,9 +72,15 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err?.status === 401
-          ? 'Incorrect email or password.'
-          : 'Could not reach the backend. Is it running on :8000?';
+        const detail = err?.error?.detail ?? '';
+        if (detail === 'MFA code required' || detail === 'Invalid MFA code') {
+          this.mfaRequired = true;
+          this.error = detail === 'Invalid MFA code' ? 'Invalid MFA code — try again.' : 'Enter your MFA code.';
+        } else {
+          this.error = err?.status === 401
+            ? 'Incorrect email or password.'
+            : 'Could not reach the backend. Is it running on :8000?';
+        }
       },
     });
   }

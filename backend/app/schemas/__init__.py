@@ -21,6 +21,16 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+# ---- MFA (FR-2) ----
+class MfaSetupOut(BaseModel):
+    secret: str
+    otpauth_uri: str
+
+
+class MfaCodeIn(BaseModel):
+    code: str
+
+
 # ---- Users ----
 class UserCreate(BaseModel):
     name: str
@@ -37,7 +47,6 @@ class UserOut(BaseModel):
     role: Role
     mfa_enabled: bool
     is_active: bool
-
 
 # ---- Assets ----
 class AssetCreate(BaseModel):

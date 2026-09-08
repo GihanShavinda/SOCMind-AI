@@ -18,11 +18,12 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(email: string, password: string): Observable<TokenPair> {
-    // Backend expects OAuth2 form fields: username + password.
+  login(email: string, password: string, otp?: string): Observable<TokenPair> {
+    // Backend expects OAuth2 form fields: username + password (+ optional otp).
     const body = new URLSearchParams();
     body.set('username', email);
     body.set('password', password);
+    if (otp) body.set('otp', otp);
 
     return this.http
       .post<TokenPair>(`${this.base}/api/auth/login`, body.toString(), {
