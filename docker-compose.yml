@@ -53,6 +53,10 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - ./detection-rules:/detection-rules
+      - ./playbooks:/playbooks
+      - ./command-catalog:/command-catalog
+      - ./intel-feeds:/intel-feeds
     command: >
       sh -c "alembic upgrade head &&
              python -m app.startup &&
